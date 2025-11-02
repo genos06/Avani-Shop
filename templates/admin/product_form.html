@@ -1,0 +1,121 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}{{ 'Edit Product' if product else 'Add Product' }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2>{{ 'Edit Product' if product else 'Add New Product' }}</h2>
+    <p class="text-muted">{{ 'Update product information' if product else 'Fill in the product details' }}</p>
+</div>
+
+<div class="content-card">
+    <form method="POST">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="form-group">
+                    <label for="name"><strong>Product Name *</strong></label>
+                    <input type="text" class="form-control" id="name" name="name" value="{{ product.name if product else '' }}" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description"><strong>Description</strong></label>
+                    <textarea class="form-control" id="description" name="description" rows="4">{{ product.description if product else '' }}</textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="price"><strong>Price (₹) *</strong></label>
+                            <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ product.price if product else '' }}" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="stock"><strong>Stock (kg) *</strong></label>
+                            <input type="number" class="form-control" id="stock" name="stock" value="{{ product.stock if product else '' }}" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="sku"><strong>SKU</strong></label>
+                            <input type="text" class="form-control" id="sku" name="sku" value="{{ product.sku if product else '' }}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="category_id"><strong>Category</strong></label>
+                            <select class="form-control" id="category_id" name="category_id">
+                                <option value="">No Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if product and product.category_id == category.id %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="image_filename"><strong>Image Filename *</strong></label>
+                    <input type="text" class="form-control" id="image_filename" name="image_filename" value="{{ product.image_filename if product else '' }}" required placeholder="img/bg-img/product.jpg">
+                    <small class="form-text text-muted">Path relative to static folder</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="tags"><strong>Tags</strong></label>
+                    <input type="text" class="form-control" id="tags" name="tags" value="{{ product.tags if product else '' }}" placeholder="tag1, tag2, tag3">
+                    <small class="form-text text-muted">Comma-separated tags</small>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-light">
+                        <strong>Product Options</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="is_featured" name="is_featured" {% if product and product.is_featured %}checked{% endif %}>
+                            <label class="form-check-label" for="is_featured">
+                                <strong>Featured Product</strong>
+                                <br><small class="text-muted">Show on homepage</small>
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="is_hot" name="is_hot" {% if product and product.is_hot %}checked{% endif %}>
+                            <label class="form-check-label" for="is_hot">
+                                <strong>Hot Item</strong>
+                                <br><small class="text-muted">Mark as trending</small>
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" class="form-check-input" id="is_sale" name="is_sale" {% if product and product.is_sale %}checked{% endif %}>
+                            <label class="form-check-label" for="is_sale">
+                                <strong>On Sale</strong>
+                                <br><small class="text-muted">Show sale badge</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-gradient btn-lg">
+                <i class="fa fa-save mr-2"></i> {{ 'Update Product' if product else 'Add Product' }}
+            </button>
+            <a href="{{ url_for('admin_products') }}" class="btn btn-secondary btn-lg">
+                <i class="fa fa-times mr-2"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,283 @@
+{% include "header.html" %}
+
+    <!-- ##### Breadcrumb Area Start ##### -->
+    <div class="breadcrumb-area">
+        <!-- Top Breadcrumb Area -->
+        <div class="top-breadcrumb-area bg-img bg-overlay d-flex align-items-center justify-content-center" style="background-image: url('{{ url_for('static', filename='img/bg-img/24.jpg') }}');">
+            <h2>Shop</h2>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Home</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Shop</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ##### Breadcrumb Area End ##### -->
+
+    <!-- ##### Shop Area Start ##### -->
+    <section class="shop-page section-padding-0-100">
+        <div class="container">
+            <div class="row">
+                <!-- Shop Sorting Data -->
+                <div class="col-12">
+                    <div class="shop-sorting-data d-flex flex-wrap align-items-center justify-content-between">
+                        <!-- Shop Page Count -->
+                        <div class="shop-page-count">
+                            <p>Showing {{ start_item }}–{{ end_item }} of {{ total }} results</p>
+                        </div>
+                        <!-- Search by Terms -->
+                        <div class="search_by_terms">
+                            <form action="{{ url_for('shop') }}" method="get" class="form-inline">
+                                <select class="custom-select widget-title" name="sort" onchange="this.form.submit()">
+                                  <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Sort by Newest</option>
+                                  <option value="price_low" {% if sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                  <option value="price_high" {% if sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                  <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name: A-Z</option>
+                                  <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name: Z-A</option>
+                                </select>
+                                <select class="custom-select widget-title" name="per_page" onchange="this.form.submit()">
+                                  <option value="9" {% if per_page == 9 %}selected{% endif %}>Show: 9</option>
+                                  <option value="12" {% if per_page == 12 %}selected{% endif %}>12</option>
+                                  <option value="18" {% if per_page == 18 %}selected{% endif %}>18</option>
+                                  <option value="24" {% if per_page == 24 %}selected{% endif %}>24</option>
+                                </select>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Sidebar Area -->
+                <div class="col-12 col-md-4 col-lg-3">
+                    <div class="shop-sidebar-area">
+
+                        <!-- Shop Widget -->
+                        <div class="shop-widget catagory mb-50">
+                            <h4 class="widget-title">Categories</h4>
+                            <div class="widget-desc">
+                                <!-- All Products -->
+                                <div class="custom-control custom-checkbox d-flex align-items-center mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="customCheckAll" {% if not category_filter %}checked{% endif %} onchange="window.location.href='{{ url_for('shop') }}'">
+                                    <label class="custom-control-label" for="customCheckAll">All Plants <span class="text-muted">({{ total }})</span></label>
+                                </div>
+                                {% for category in categories %}
+                                <!-- Single Checkbox -->
+                                <div class="custom-control custom-checkbox d-flex align-items-center mb-2">
+                                    <input type="checkbox" class="custom-control-input" id="customCheck{{ category.id }}" {% if category_filter == category.id %}checked{% endif %} onchange="window.location.href='{{ url_for('shop', category=category.id) }}'">
+                                    <label class="custom-control-label" for="customCheck{{ category.id }}">{{ category.name }} <span class="text-muted">({{ category.products|length }})</span></label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Shop Widget -->
+                        <div class="shop-widget best-seller mb-50">
+                            <h4 class="widget-title">Best Seller</h4>
+                            <div class="widget-desc">
+                                {% for product in best_sellers %}
+                                <!-- Single Best Seller Products -->
+                                <div class="single-best-seller-product d-flex align-items-center">
+                                    <div class="product-thumbnail">
+                                        <a href="{{ url_for('shop_details', product_id=product.id) }}"><img src="{{ url_for('static', filename=product.image_filename) }}" alt="{{ product.name }}"></a>
+                                    </div>
+                                    <div class="product-info">
+                                        <a href="{{ url_for('shop_details', product_id=product.id) }}">{{ product.name }}</a>
+                                        <p>₹{{ "%.2f"|format(product.price) }}</p>
+                                        <div class="ratings">
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                            <i class="fa fa-star"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- All Products Area -->
+                <div class="col-12 col-md-8 col-lg-9">
+                    <div class="shop-products-area">
+                        <div class="row">
+                            {% if products %}
+                                {% for product in products %}
+                                <!-- Single Product Area -->
+                                <div class="col-12 col-sm-6 col-lg-4">
+                                    <div class="single-product-area mb-50">
+                                        <!-- Product Image -->
+                                        <div class="product-img" style="position: relative;">
+                                            <a href="{{ url_for('shop_details', product_id=product.id) }}" style="pointer-events: auto;"><img src="{{ url_for('static', filename=product.image_filename) }}" alt="{{ product.name }}" style="pointer-events: none;"></a>
+                                            <!-- Product Tag -->
+                                            {% if product.is_hot %}
+                                            <div class="product-tag">
+                                                <a href="#">Hot</a>
+                                            </div>
+                                            {% elif product.is_sale %}
+                                            <div class="product-tag sale-tag">
+                                                <a href="#">Sale</a>
+                                            </div>
+                                            {% endif %}
+                                            <div class="product-meta" style="justify-content: flex-start;">
+                                                <form action="{{ url_for('add_to_cart', product_id=product.id) }}" method="post" style="display: inline;" onclick="event.stopPropagation();">
+                                                    <input type="hidden" name="quantity" value="1">
+                                                    <button type="submit" class="cart-button-shop" style="border: none; cursor: pointer; padding: 0; font-size: 16px; color: #ffffff; font-weight: 600; background-color: #303030; flex: 0 0 50px; max-width: 50px; width: 50px; height: 50px; line-height: 50px; text-transform: uppercase; text-align: center;"><i class="fa fa-shopping-cart"></i></button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <!-- Product Info -->
+                                        <div class="product-info mt-15 text-center">
+                                            <a href="{{ url_for('shop_details', product_id=product.id) }}">
+                                                <p>{{ product.name }}</p>
+                                            </a>
+                                            <h6>₹{{ "%.2f"|format(product.price) }}</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="col-12">
+                                    <p class="text-center">No products found.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if total_pages > 1 %}
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination">
+                                {% if page > 1 %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('shop', page=page-1, sort=sort_by, per_page=per_page, category=category_filter) }}"><i class="fa fa-angle-left"></i></a></li>
+                                {% endif %}
+                                
+                                {% for p in range(1, total_pages + 1) %}
+                                    {% if p == page %}
+                                    <li class="page-item active"><a class="page-link" href="#">{{ p }}</a></li>
+                                    {% elif p <= 3 or p > total_pages - 3 or (p >= page - 1 and p <= page + 1) %}
+                                    <li class="page-item"><a class="page-link" href="{{ url_for('shop', page=p, sort=sort_by, per_page=per_page, category=category_filter) }}">{{ p }}</a></li>
+                                    {% elif p == 4 or p == total_pages - 3 %}
+                                    <li class="page-item disabled"><a class="page-link" href="#">...</a></li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if page < total_pages %}
+                                <li class="page-item"><a class="page-link" href="{{ url_for('shop', page=page+1, sort=sort_by, per_page=per_page, category=category_filter) }}"><i class="fa fa-angle-right"></i></a></li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Shop Area End ##### -->
+
+    <script>
+        // Prevent magnificPopup on shop page and ensure product links work
+        $(document).ready(function() {
+            // Remove any magnificPopup initialization on product images
+            $('.product-img a').magnificPopup('destroy');
+            
+            // Remove all magnificPopup event handlers
+            $('.product-img a').off('click.magnificPopup mfpopen');
+            
+            // Ensure product image links navigate to product details
+            $('.product-img a').on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = $(this).attr('href');
+            });
+            
+            // Add hover effect to cart button
+            $('.cart-button-shop').hover(
+                function() {
+                    $(this).css('background-color', '#70c745');
+                    $(this).css('transition', 'background-color 300ms');
+                },
+                function() {
+                    $(this).css('background-color', '#303030');
+                }
+            );
+        });
+    </script>
+    
+    <style>
+        /* Hover effect for cart button */
+        .cart-button-shop:hover {
+            background-color: #70c745 !important;
+            transition: background-color 300ms !important;
+        }
+        
+        /* Ensure product images are clickable and don't trigger popup */
+        .shop-products-area .product-img a {
+            cursor: pointer;
+            pointer-events: auto !important;
+        }
+        
+        .shop-products-area .product-img img {
+            pointer-events: none !important;
+        }
+
+        /* Price slider styling */
+        #filter-price-btn {
+            font-size: 12px;
+            padding: 8px 20px;
+            width: 100%;
+        }
+        
+        .ui-slider {
+            position: relative;
+            text-align: left;
+            background: #e0e0e0;
+            height: 5px;
+            border-radius: 3px;
+        }
+        
+        .ui-slider .ui-slider-range {
+            position: absolute;
+            z-index: 1;
+            display: block;
+            background: #70c745;
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .ui-slider .ui-slider-handle {
+            position: absolute;
+            z-index: 2;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            background: #70c745;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            outline: none;
+        }
+        
+        .ui-slider .ui-slider-handle:hover,
+        .ui-slider .ui-slider-handle:focus {
+            background: #5ba835;
+        }
+        
+        .range-price {
+            margin-top: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+    </style>
+
+{% include "footer.html" %}

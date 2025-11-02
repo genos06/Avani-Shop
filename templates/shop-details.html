@@ -1,0 +1,201 @@
+{% include "header.html" %}
+
+    <!-- ##### Breadcrumb Area Start ##### -->
+    <div class="breadcrumb-area">
+        <!-- Top Breadcrumb Area -->
+        <div class="top-breadcrumb-area bg-img bg-overlay d-flex align-items-center justify-content-center" style="background-image: url('{{ url_for('static', filename='img/bg-img/24.jpg') }}');">
+            <h2>SHOP DETAILS</h2>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('shop') }}">Shop</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ##### Breadcrumb Area End ##### -->
+
+    <!-- ##### Single Product Details Area Start ##### -->
+    <section class="single_product_details_area mb-50">
+        <div class="produts-details--content mb-50">
+            <div class="container">
+                <div class="row justify-content-between">
+
+                    <div class="col-12 col-md-6 col-lg-5">
+                        <div class="single_product_thumb">
+                            <div id="product_details_slider" class="carousel slide" data-ride="carousel">
+                                <div class="carousel-inner">
+                                    <div class="carousel-item active">
+                                        <a class="product-img" href="{{ url_for('static', filename=product.image_filename) }}" title="{{ product.name }}">
+                                        <img class="d-block w-100" src="{{ url_for('static', filename=product.image_filename) }}" alt="{{ product.name }}">
+                                    </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <div class="single_product_desc">
+                            <h4 class="title">{{ product.name }}</h4>
+                            <h4 class="price">${{ "%.2f"|format(product.price) }}</h4>
+                            <div class="short_overview">
+                                <p>{{ product.description if product.description else 'No description available for this product.' }}</p>
+                            </div>
+
+                            {% if product.stock > 0 %}
+                            <div class="cart--area d-flex flex-wrap align-items-center">
+                                <!-- Add to Cart Form -->
+                                <form class="cart clearfix d-flex align-items-center" method="post" action="{{ url_for('add_to_cart', product_id=product.id) }}">
+                                    <div class="quantity">
+                                        <span class="qty-minus" onclick="var effect = document.getElementById('qty'); var qty = effect.value; if( !isNaN( qty ) && qty > 1 ) effect.value--;return false;"><i class="fa fa-minus" aria-hidden="true"></i></span>
+                                        <input type="number" class="qty-text" id="qty" step="1" min="1" max="{{ product.stock }}" name="quantity" value="1">
+                                        <span class="qty-plus" onclick="var effect = document.getElementById('qty'); var qty = effect.value; if( !isNaN( qty ) && qty < {{ product.stock }} ) effect.value++;return false;"><i class="fa fa-plus" aria-hidden="true"></i></span>
+                                    </div>
+                                    <span class="ml-2 mr-2">kg</span>
+                                    <button type="submit" name="addtocart" value="{{ product.id }}" class="btn alazea-btn ml-15">Add to cart</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-warning mt-3">
+                                <strong>Out of Stock</strong> - This product is currently unavailable.
+                            </div>
+                            {% endif %}
+
+                            <div class="products--meta">
+                                <p><span>SKU:</span> <span>{{ product.sku if product.sku else 'N/A' }}</span></p>
+                                {% if product.category %}
+                                <p><span>Category:</span> <span>{{ product.category.name }}</span></p>
+                                {% endif %}
+                                {% if product.tags %}
+                                <p><span>Tags:</span> <span>{{ product.tags }}</span></p>
+                                {% endif %}
+                                <p><span>Stock:</span> <span>{{ product.stock }} available</span></p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="product_details_tab clearfix">
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs" role="tablist" id="product-details-tab">
+                            <li class="nav-item">
+                                <a href="#description" class="nav-link active" data-toggle="tab" role="tab">Description</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#addi-info" class="nav-link" data-toggle="tab" role="tab">Additional Information</a>
+                            </li>
+                        </ul>
+                        <!-- Tab Content -->
+                        <div class="tab-content">
+                            <div role="tabpanel" class="tab-pane fade show active" id="description">
+                                <div class="description_area">
+                                    <p>{{ product.description if product.description else 'No detailed description available for this product.' }}</p>
+                                </div>
+                            </div>
+                            <div role="tabpanel" class="tab-pane fade" id="addi-info">
+                                <div class="additional_info_area">
+                                    <p>Product Name: <span>{{ product.name }}</span></p>
+                                    <p>Price: <span>${{ "%.2f"|format(product.price) }}</span></p>
+                                    <p>Stock Available: <span>{{ product.stock }} units</span></p>
+                                    {% if product.category %}
+                                    <p>Category: <span>{{ product.category.name }}</span></p>
+                                    {% endif %}
+                                    {% if product.sku %}
+                                    <p>SKU: <span>{{ product.sku }}</span></p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ##### Single Product Details Area End ##### -->
+
+    <!-- ##### Related Product Area Start ##### -->
+    {% if related_products %}
+    <div class="related-products-area">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Section Heading -->
+                    <div class="section-heading text-center">
+                        <h2>Related Products</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                {% for rel_product in related_products %}
+                <!-- Single Product Area -->
+                <div class="col-12 col-sm-6 col-lg-3">
+                    <div class="single-product-area mb-100">
+                        <!-- Product Image -->
+                        <div class="product-img">
+                            <a href="{{ url_for('shop_details', product_id=rel_product.id) }}"><img src="{{ url_for('static', filename=rel_product.image_filename) }}" alt="{{ rel_product.name }}"></a>
+                            <!-- Product Tag -->
+                            {% if rel_product.is_hot %}
+                            <div class="product-tag">
+                                <a href="#">Hot</a>
+                            </div>
+                            {% elif rel_product.is_sale %}
+                            <div class="product-tag sale-tag">
+                                <a href="#">Sale</a>
+                            </div>
+                            {% endif %}
+                            <div class="product-meta d-flex">
+                                <a href="#" class="wishlist-btn"><i class="icon_heart_alt"></i></a>
+                                <form action="{{ url_for('add_to_cart', product_id=rel_product.id) }}" method="post" style="display: inline;">
+                                    <input type="hidden" name="quantity" value="1">
+                                    <button type="submit" class="add-to-cart-btn" style="border: none; background: none; cursor: pointer;">Add to cart</button>
+                                </form>
+                                <a href="#" class="compare-btn"><i class="arrow_left-right_alt"></i></a>
+                            </div>
+                        </div>
+                        <!-- Product Info -->
+                        <div class="product-info mt-15 text-center">
+                            <a href="{{ url_for('shop_details', product_id=rel_product.id) }}">
+                                <p>{{ rel_product.name }}</p>
+                            </a>
+                            <h6>${{ "%.2f"|format(rel_product.price) }}</h6>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <!-- ##### Related Product Area End ##### -->
+
+    <style>
+        /* Remove spinner arrows from number input */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        
+        input[type=number] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+    </style>
+
+{% include "footer.html" %}

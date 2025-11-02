@@ -1,0 +1,124 @@
+{% include "header.html" %}
+
+    <!-- ##### Breadcrumb Area Start ##### -->
+    <div class="breadcrumb-area">
+        <!-- Top Breadcrumb Area -->
+        <div class="top-breadcrumb-area bg-img bg-overlay d-flex align-items-center justify-content-center" style="background-image: url('{{ url_for('static', filename='img/bg-img/24.jpg') }}');">
+            <h2>Order Details</h2>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('home') }}"><i class="fa fa-home"></i> Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('orders') }}">Orders</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">Order #{{ order.id }}</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ##### Breadcrumb Area End ##### -->
+
+    <!-- ##### Order Details Area Start ##### -->
+    <div class="checkout_area section-padding-100">
+        <div class="container">
+            <div class="row">
+                <div class="col-12 col-lg-8">
+                    <div class="checkout_details_area mb-50 clearfix">
+                        <div class="cart-title">
+                            <h2>Order #{{ order.id }}</h2>
+                            <p>Placed on {{ order.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                        </div>
+
+                        <h5 class="mt-4">Order Items</h5>
+                        <div class="cart-table clearfix mb-4">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity (kg)</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in order.order_items %}
+                                    <tr>
+                                        <td class="cart_product_desc">
+                                            <h5>{{ item.product.name }}</h5>
+                                        </td>
+                                        <td class="price">
+                                            <span>${{ "%.2f"|format(item.price) }}</span>
+                                        </td>
+                                        <td class="qty">
+                                            <span>{{ item.quantity }} kg</span>
+                                        </td>
+                                        <td class="price">
+                                            <span>${{ "%.2f"|format(item.get_subtotal()) }}</span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h5 class="mt-4">Shipping Address</h5>
+                        <div class="card">
+                            <div class="card-body">
+                                <p><strong>{{ order.first_name }} {{ order.last_name }}</strong></p>
+                                {% if order.company %}
+                                <p>{{ order.company }}</p>
+                                {% endif %}
+                                <p>{{ order.address }}</p>
+                                <p>{{ order.city }}, {{ order.state }} {% if order.postcode %}{{ order.postcode }}{% endif %}</p>
+                                <p>{{ order.country }}</p>
+                                <hr>
+                                <p><strong>Email:</strong> {{ order.email }}</p>
+                                <p><strong>Phone:</strong> {{ order.phone }}</p>
+                                {% if order.telephone %}
+                                <p><strong>Telephone:</strong> {{ order.telephone }}</p>
+                                {% endif %}
+                                {% if order.order_notes %}
+                                <hr>
+                                <p><strong>Order Notes:</strong></p>
+                                <p>{{ order.order_notes }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <div class="checkout-content">
+                        <h5 class="title--">Order Summary</h5>
+                        <div class="order-total d-flex justify-content-between align-items-center">
+                            <h5>Total Amount</h5>
+                            <h5>${{ "%.2f"|format(order.total_amount) }}</h5>
+                        </div>
+                        <div class="order-total d-flex justify-content-between align-items-center mt-3">
+                            <h5>Status</h5>
+                            {% if order.status == 'pending' %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% elif order.status == 'processing' %}
+                            <span class="badge badge-info">Processing</span>
+                            {% elif order.status == 'completed' %}
+                            <span class="badge badge-success">Completed</span>
+                            {% else %}
+                            <span class="badge badge-danger">Cancelled</span>
+                            {% endif %}
+                        </div>
+                        <div class="mt-30">
+                            <a href="{{ url_for('orders') }}" class="btn alazea-btn w-100">Back to Orders</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ##### Order Details Area End ##### -->
+
+{% include "footer.html" %}
