@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for, request, redirect, flash, jsonify, session as flask_session
-from flask_bootstrap import Bootstrap4
+from flask_bootstrap import Bootstrap
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import ForeignKey, create_engine, String, Text, Float, Integer, Boolean, DateTime
 from sqlalchemy.orm import Session, relationship
@@ -30,7 +30,7 @@ else:
     app.config['SECRET_KEY'] = 'your-secret-key-here-change-in-production'
     engine = create_engine("sqlite:///site.db", echo=True)
 
-bootstrap = Bootstrap4(app)
+bootstrap = Bootstrap(app)
 db_session = Session(engine)
 
 
