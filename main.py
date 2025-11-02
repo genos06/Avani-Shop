@@ -1018,6 +1018,9 @@ def add_sample_data():
     db_session.commit()
     print("Sample data added successfully!")
 
+# Vercel requires the app to be available at module level
+app = app
+
 if __name__ == "__main__":
     # Initialize database
     init_db()
