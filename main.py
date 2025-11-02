@@ -8,6 +8,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 from typing import Optional
 import os
+from dotenv import load_dotenv
+import tempfile
+
+# Load environment variables from .env file
+load_dotenv()
 
 
 
@@ -1021,13 +1026,104 @@ def add_sample_data():
     print("Sample data added successfully!")
 
 # ============================================
-# FERTILIZER ADVISOR ROUTES
+# FERTILIZER ADVISOR ROUTES WITH DEEPGRAM
 # ============================================
 
 @app.route("/fertilizer-advisor")
 def fertilizer_advisor():
-    """Fertilizer advisor page with speech recognition"""
-    return render_template("fertilizer-advisor.html")
+    """Fertilizer advisor page with Deepgram speech recognition"""
+    return render_template("fertilizer-advisor-deepgram.html")
+
+@app.route("/api/transcribe-audio", methods=['POST'])
+def transcribe_audio():
+    """
+    API endpoint to transcribe audio using Deepgram
+    Accepts audio file and returns transcribed text in Hindi/English/Hinglish
+    """
+    try:
+        from deepgram import DeepgramClient, PrerecordedOptions, FileSource
+        
+        # Check if audio file is present
+        if 'audio' not in request.files:
+            return jsonify({
+                "success": False,
+                "error": "No audio file provided"
+            }), 400
+        
+        audio_file = request.files['audio']
+        
+        if audio_file.filename == '':
+            return jsonify({
+                "success": False,
+                "error": "Empty filename"
+            }), 400
+        
+        # Get Deepgram API key
+        deepgram_api_key = os.getenv('DEEPGRAM_API_KEY')
+        if not deepgram_api_key:
+            return jsonify({
+                "success": False,
+                "error": "Deepgram API key not configured"
+            }), 500
+        
+        # Save audio file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.webm') as temp_audio:
+            audio_file.save(temp_audio.name)
+            temp_audio_path = temp_audio.name
+        
+        try:
+            # Initialize Deepgram client
+            deepgram = DeepgramClient(deepgram_api_key)
+            
+            # Read audio file
+            with open(temp_audio_path, 'rb') as audio:
+                buffer_data = audio.read()
+            
+            payload: FileSource = {
+                "buffer": buffer_data,
+            }
+            
+            # Configure Deepgram options - Force Hindi transcription
+            options = PrerecordedOptions(
+                model="nova-2",
+                language="hi",  # Force Hindi only
+                smart_format=True,
+                punctuate=True,
+            )
+            
+            # Transcribe audio
+            response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
+            
+            # Extract transcription
+            transcript = response["results"]["channels"][0]["alternatives"][0]["transcript"]
+            
+            if not transcript or not transcript.strip():
+                return jsonify({
+                    "success": False,
+                    "error": "No speech detected in audio"
+                }), 400
+            
+            return jsonify({
+                "success": True,
+                "transcription": transcript.strip()
+            })
+            
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_audio_path):
+                os.remove(temp_audio_path)
+    
+    except ImportError:
+        return jsonify({
+            "success": False,
+            "error": "Deepgram SDK not installed. Run: pip install deepgram-sdk"
+        }), 500
+    
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Transcription failed: {str(e)}"
+        }), 500
 
 @app.route("/api/fertilizer-recommendation", methods=['POST'])
 def fertilizer_recommendation_api():

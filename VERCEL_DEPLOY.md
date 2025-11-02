@@ -72,7 +72,10 @@ git push -u origin main
      SECRET_KEY=your-generated-secret-key
      DATABASE_URL=your-postgres-connection-string
      FLASK_ENV=production
+     DEEPGRAM_API_KEY=your-deepgram-api-key
      ```
+   
+   **Note:** The `DEEPGRAM_API_KEY` is required for the AI Fertilizer Advisor feature with Hindi speech recognition.
 
 6. Click **"Deploy"**
 
@@ -92,6 +95,7 @@ vercel
 vercel env add SECRET_KEY
 vercel env add DATABASE_URL
 vercel env add FLASK_ENV
+vercel env add DEEPGRAM_API_KEY
 
 # Deploy to production
 vercel --prod
@@ -175,7 +179,20 @@ Make sure these are set in Vercel:
 SECRET_KEY=<your-generated-secret-key>
 DATABASE_URL=<postgresql-connection-string>
 FLASK_ENV=production
+DEEPGRAM_API_KEY=<your-deepgram-api-key>
 ```
+
+### How to Add Deepgram API Key to Vercel:
+
+1. Get your Deepgram API key from https://console.deepgram.com/
+2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+3. Click "Add New"
+4. Name: `DEEPGRAM_API_KEY`
+5. Value: Paste your API key (e.g., `19d3d3267970b9826b1d47a8396755d1d63232e1`)
+6. Select environments: Production, Preview, Development
+7. Click "Save"
+
+**Note:** The Deepgram API key enables the AI Fertilizer Advisor feature with advanced Hindi/English/Hinglish speech recognition.
 
 ## 📁 Project Structure
 
