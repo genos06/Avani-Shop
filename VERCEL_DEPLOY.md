@@ -99,29 +99,55 @@ vercel --prod
 
 ### 5. Initialize Database
 
-After deployment, you need to initialize your database. Use Vercel's shell or run locally with production DATABASE_URL:
+After deployment, you need to initialize your database with tables, admin user, and sample data.
+
+#### Method 1: Using Vercel CLI (Recommended)
+
+```bash
+# Install Vercel CLI if not already installed
+npm i -g vercel
+
+# Pull environment variables to local
+vercel env pull .env.local
+
+# Load the environment variables and run initialization
+export $(cat .env.local | xargs)
+
+# Initialize database (creates tables, admin user, sample data)
+python3 init_vercel_db.py
+```
+
+#### Method 2: Run Locally with Production Database URL
 
 ```bash
 # Set your production DATABASE_URL temporarily
-export DATABASE_URL="your-production-database-url"
+export DATABASE_URL="your-production-database-url-from-vercel"
+export SECRET_KEY="your-secret-key"
+export FLASK_ENV="production"
 
 # Initialize database
-python3 -c "from main import init_db; init_db()"
+python3 init_vercel_db.py
+```
 
-# Add sample data (optional)
-python3 -c "from main import add_sample_data; add_sample_data()"
+#### Method 3: Manual Initialization
+
+```bash
+# Set environment variables
+export DATABASE_URL="your-production-database-url"
+
+# Create tables
+python3 -c "from main import Base, engine; Base.metadata.create_all(engine); print('Tables created!')"
 
 # Create admin user
-python3 setup_admin.py
+python3 -c "from main import db_session, User, Cart; from werkzeug.security import generate_password_hash; admin = User(username='admin', email='admin@avanii.com', password_hash=generate_password_hash('admin123'), is_admin=True); db_session.add(admin); db_session.commit(); cart = Cart(user_id=admin.id); db_session.add(cart); db_session.commit(); print('Admin user created!')"
 ```
 
-Or use Vercel CLI:
-```bash
-vercel env pull .env.local
-python3 -c "from main import init_db; init_db()"
-python3 -c "from main import add_sample_data; add_sample_data()"
-python3 setup_admin.py
-```
+**Default Admin Credentials:**
+- Username: `admin`
+- Password: `admin123`
+- Login URL: `https://your-app.vercel.app/admin/login`
+
+⚠️ **IMPORTANT:** Change the admin password immediately after first login!
 
 ### 6. Configure Custom Domain (Optional)
 
