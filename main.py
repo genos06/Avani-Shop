@@ -1020,6 +1020,147 @@ def add_sample_data():
     db_session.commit()
     print("Sample data added successfully!")
 
+# ============================================
+# FERTILIZER ADVISOR ROUTES
+# ============================================
+
+@app.route("/fertilizer-advisor")
+def fertilizer_advisor():
+    """Fertilizer advisor page with speech recognition"""
+    return render_template("fertilizer-advisor.html")
+
+@app.route("/api/fertilizer-recommendation", methods=['POST'])
+def fertilizer_recommendation_api():
+    """
+    API endpoint to get fertilizer recommendation based on user input
+    
+    JSON Parameters:
+        - user_input: String containing farmer's description of land, soil, and crops
+    
+    Returns:
+        JSON with fertilizer recommendation including product_name, amount, and why
+    """
+    try:
+        data = request.get_json()
+        user_input = data.get('user_input', '').strip()
+        
+        # Validate input
+        if not user_input:
+            return jsonify({
+                "success": False,
+                "error": "Empty input received"
+            }), 400
+        
+        if len(user_input) < 10:
+            return jsonify({
+                "success": False,
+                "error": "Input too short. Please provide more details about your land and crops."
+            }), 400
+        
+        # Simple keyword-based fertilizer recommendation
+        # This is a basic implementation - you can enhance it with AI/ML later
+        recommendation = get_simple_fertilizer_recommendation(user_input)
+        
+        return jsonify(recommendation)
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+def get_simple_fertilizer_recommendation(user_input):
+    """
+    Generate fertilizer recommendation based on keywords in user input
+    This is a simple rule-based system. You can replace with AI later.
+    """
+    user_input_lower = user_input.lower()
+    
+    # Extract land size (simple pattern matching)
+    land_acres = 0
+    import re
+    
+    # Look for patterns like "5 acre", "2 bigha", etc.
+    acre_match = re.search(r'(\d+\.?\d*)\s*(?:acre|acres|एकड़)', user_input_lower)
+    bigha_match = re.search(r'(\d+\.?\d*)\s*(?:bigha|बीघा)', user_input_lower)
+    
+    if acre_match:
+        land_acres = float(acre_match.group(1))
+    elif bigha_match:
+        # Convert bigha to acres (1 bigha ≈ 0.62 acres)
+        land_acres = float(bigha_match.group(1)) * 0.62
+    
+    # Detect nutrients needed based on keywords
+    nutrients = []
+    reasons = []
+    
+    # Nitrogen detection
+    nitrogen_keywords = ['nitrogen', 'n', 'leaf', 'green', 'growth', 'wheat', 'rice', 'paddy', 'गेहूं', 'धान', 'नाइट्रोजन']
+    if any(keyword in user_input_lower for keyword in nitrogen_keywords):
+        nutrients.append("Nitrogen")
+        reasons.append("Nitrogen promotes leaf growth and green color")
+    
+    # Phosphorus detection
+    phosphorus_keywords = ['phosphorus', 'p', 'root', 'flower', 'fruit', 'फॉस्फोरस', 'जड़', 'फूल']
+    if any(keyword in user_input_lower for keyword in phosphorus_keywords):
+        nutrients.append("Phosphorus")
+        reasons.append("Phosphorus strengthens roots and promotes flowering")
+    
+    # Potassium detection
+    potassium_keywords = ['potassium', 'k', 'disease', 'resistance', 'पोटैशियम', 'रोग']
+    if any(keyword in user_input_lower for keyword in potassium_keywords):
+        nutrients.append("Potassium")
+        reasons.append("Potassium improves disease resistance")
+    
+    # Crop-specific recommendations
+    if any(crop in user_input_lower for crop in ['tomato', 'potato', 'vegetable', 'टमाटर', 'आलू', 'सब्जी']):
+        if "Nitrogen" not in nutrients:
+            nutrients.append("Nitrogen")
+            reasons.append("Vegetables need nitrogen for leafy growth")
+        if "Phosphorus" not in nutrients:
+            nutrients.append("Phosphorus")
+            reasons.append("Phosphorus for strong root development")
+    
+    if any(crop in user_input_lower for crop in ['wheat', 'rice', 'corn', 'maize', 'गेहूं', 'धान', 'मक्का']):
+        if "Nitrogen" not in nutrients:
+            nutrients.append("Nitrogen")
+            reasons.append("Cereal crops require high nitrogen")
+    
+    # Default recommendation if nothing detected
+    if not nutrients:
+        nutrients = ["Nitrogen", "Phosphorus", "Potassium"]
+        reasons.append("Complete nutrition for healthy plant growth")
+    
+    # Generate product name
+    if len(nutrients) == 3:
+        product_name = "Avanii NPK Complete"
+    elif len(nutrients) == 2:
+        product_name = f"Avanii {nutrients[0][0]}{nutrients[1][0]} Mix"
+    else:
+        product_name = f"Avanii {nutrients[0]} Booster"
+    
+    # Calculate amount
+    if land_acres > 0:
+        # Base calculation: 10kg per nutrient per acre
+        amount = len(nutrients) * land_acres * 10
+        amount_str = f"{int(amount)} kg"
+    else:
+        amount_str = "Consult our expert (land size not specified)"
+    
+    # Create why explanation
+    why = " | ".join(reasons)
+    if land_acres > 0:
+        why += f" | Recommended for {land_acres:.1f} acres of land"
+    
+    return {
+        "success": True,
+        "product_name": product_name,
+        "amount": amount_str,
+        "why": why,
+        "nutrients": nutrients,
+        "land_acres": land_acres if land_acres > 0 else "Not specified"
+    }
+
 # Vercel requires the app to be available at module level
 app = app
 
