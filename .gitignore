@@ -1,6 +1,7 @@
 # Environment variables
 .env
 .env.local
+API_KEYS_SECRET.md
 
 # Python
 __pycache__/
