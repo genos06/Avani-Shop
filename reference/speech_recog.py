@@ -18,7 +18,7 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 # Initialize GenAI client
-client = genai.Client(api_key="AIzaSyB_9GgIcnuEz-40TZmpHEv1Zn5B5u95t7w")
+client = genai.Client(api_key="YOUR_GEMINI_API_KEY_HERE")
 
 
 def get_fertilizer_recommendation(user_input: str):

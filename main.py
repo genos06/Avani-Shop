@@ -1167,8 +1167,141 @@ def fertilizer_recommendation_api():
 
 def get_simple_fertilizer_recommendation(user_input):
     """
-    Generate fertilizer recommendation based on keywords in user input
-    This is a simple rule-based system. You can replace with AI later.
+    Generate fertilizer recommendation using Gemini AI to extract structured data
+    
+    Args:
+        user_input (str): Farmer's description in Hindi/English/Hinglish
+        
+    Returns:
+        dict: Contains product_name, amount, why, nutrients, and land_acres
+    """
+    try:
+        import google.generativeai as genai
+        import re
+        import json
+        
+        # Get Gemini API key
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        if not gemini_api_key:
+            # Fallback to simple keyword-based recommendation
+            return get_fallback_recommendation(user_input)
+        
+        # Configure Gemini
+        genai.configure(api_key=gemini_api_key)
+        model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        
+        # Create prompt for Gemini to extract structured information
+        prompt = f"""
+You are an expert agronomist AI assistant. A farmer is providing information about their farming needs in English, Hindi, or Hinglish (mix of Hindi and English).
+
+**CRITICAL INSTRUCTIONS:**
+
+1. **Land Size Extraction** (MOST IMPORTANT):
+   - Look for land size keywords in Hindi: एकड़ (acre), बीघा (bigha), हेक्टेयर (hectare), जमीन (land), खेत (field)
+   - Look for Hindi numbers: एक (1), दो (2), तीन (3), चार (4), पांच (5), etc.
+   - Convert all units to acres:
+     * 1 एकड़/acre = 1 acre
+     * 1 बीघा/bigha = 0.62 acres
+     * 1 हेक्टेयर/hectare = 2.47 acres
+   - Examples:
+     * "2 एकड़" = 2 acres
+     * "तीन बीघा" = 3 × 0.62 = 1.86 acres
+     * "दो हेक्टेयर" = 2 × 2.47 = 4.94 acres
+
+2. **Nutrient Detection**:
+   - Hindi terms: नाइट्रोजन (Nitrogen), फास्फोरस (Phosphorus), पोटेशियम (Potassium)
+   - English terms: Nitrogen (N), Phosphorus (P), Potassium (K), NPK
+   - If farmer mentions soil deficiency (मिट्टी में कमी), extract those nutrients
+   - If no specific nutrients mentioned, recommend all three: ["Nitrogen", "Phosphorus", "Potassium"]
+
+3. **Output Format**:
+   - Return ONLY valid JSON (no markdown, no code blocks, no explanations)
+   - Required fields: nutrients (list), land_acres (number), why (string in English)
+
+**Farmer's Input:** 
+{user_input}
+
+**Your Response (JSON only):**
+{{
+  "nutrients": ["Nitrogen", "Phosphorus", "Potassium"],
+  "land_acres": <number in acres>,
+  "why": "<brief explanation in English>"
+}}
+"""
+        
+        # Generate response
+        response = model.generate_content(prompt)
+        llm_text = response.text.strip()
+        
+        # Debug logging
+        print(f"=== GEMINI DEBUG ===")
+        print(f"User Input: {user_input}")
+        print(f"Gemini Raw Response: {llm_text}")
+        print(f"===================")
+        
+        # Remove markdown code blocks if present
+        llm_text = re.sub(r'```json\s*', '', llm_text)
+        llm_text = re.sub(r'```\s*', '', llm_text)
+        llm_text = llm_text.strip()
+        
+        # Parse JSON response
+        try:
+            llm_dict = json.loads(llm_text)
+        except json.JSONDecodeError:
+            # Try to extract JSON from text
+            json_match = re.search(r'\{.*\}', llm_text, re.DOTALL)
+            if json_match:
+                llm_dict = json.loads(json_match.group(0))
+            else:
+                return get_fallback_recommendation(user_input)
+        
+        # Extract values
+        nutrients_list = llm_dict.get("nutrients", ["Nitrogen", "Phosphorus", "Potassium"])
+        land_acres = float(llm_dict.get("land_acres", 0))
+        why_text = llm_dict.get("why", "Recommended for healthy crop growth")
+        
+        # Validate extracted data
+        if not isinstance(nutrients_list, list) or len(nutrients_list) == 0:
+            nutrients_list = ["Nitrogen", "Phosphorus", "Potassium"]
+        
+        if land_acres < 0 or land_acres > 10000:
+            land_acres = 0
+        
+        # Generate product name based on nutrients
+        if len(nutrients_list) == 3:
+            product_name = "Avanii NPK Complete"
+        elif len(nutrients_list) == 2:
+            product_name = f"Avanii {nutrients_list[0][0]}{nutrients_list[1][0]} Mix"
+        elif len(nutrients_list) == 1:
+            product_name = f"Avanii {nutrients_list[0]} Booster"
+        else:
+            product_name = "Avanii General Purpose Fertilizer"
+        
+        # Calculate amount using original formula: nutrients * land_acres * 12 kg
+        if land_acres > 0:
+            amount = len(nutrients_list) * land_acres * 12  # kg per nutrient per acre
+            amount_str = f"{int(amount)} kg"
+        else:
+            amount_str = "Contact for consultation (land size not provided)"
+        
+        return {
+            "success": True,
+            "product_name": product_name,
+            "amount": amount_str,
+            "why": why_text,
+            "nutrients": nutrients_list,
+            "land_acres": land_acres if land_acres > 0 else "Not specified"
+        }
+        
+    except Exception as e:
+        print(f"Gemini AI error: {str(e)}")
+        # Fallback to keyword-based recommendation
+        return get_fallback_recommendation(user_input)
+
+
+def get_fallback_recommendation(user_input):
+    """
+    Fallback keyword-based fertilizer recommendation when Gemini is unavailable
     """
     user_input_lower = user_input.lower()
     
@@ -1176,15 +1309,39 @@ def get_simple_fertilizer_recommendation(user_input):
     land_acres = 0
     import re
     
-    # Look for patterns like "5 acre", "2 bigha", etc.
+    # Hindi number word to digit mapping
+    hindi_numbers = {
+        'एक': 1, 'दो': 2, 'तीन': 3, 'चार': 4, 'पांच': 5, 'पाँच': 5,
+        'छह': 6, 'सात': 7, 'आठ': 8, 'नौ': 9, 'दस': 10,
+        'ek': 1, 'do': 2, 'teen': 3, 'char': 4, 'paanch': 5,
+        'chhe': 6, 'saat': 7, 'aath': 8, 'nau': 9, 'das': 10
+    }
+    
+    # Look for patterns like "5 acre", "2 bigha", "दो एकड़", etc.
     acre_match = re.search(r'(\d+\.?\d*)\s*(?:acre|acres|एकड़)', user_input_lower)
     bigha_match = re.search(r'(\d+\.?\d*)\s*(?:bigha|बीघा)', user_input_lower)
+    
+    # Try Hindi word numbers
+    if not acre_match and not bigha_match:
+        for hindi_word, digit in hindi_numbers.items():
+            if hindi_word in user_input_lower:
+                # Check if followed by land unit
+                if 'एकड़' in user_input_lower or 'acre' in user_input_lower:
+                    land_acres = digit
+                    break
+                elif 'बीघा' in user_input_lower or 'bigha' in user_input_lower:
+                    land_acres = digit * 0.62
+                    break
     
     if acre_match:
         land_acres = float(acre_match.group(1))
     elif bigha_match:
         # Convert bigha to acres (1 bigha ≈ 0.62 acres)
         land_acres = float(bigha_match.group(1)) * 0.62
+    
+    print(f"=== FALLBACK DEBUG ===")
+    print(f"Extracted land acres: {land_acres}")
+    print(f"======================")
     
     # Detect nutrients needed based on keywords
     nutrients = []
@@ -1235,13 +1392,12 @@ def get_simple_fertilizer_recommendation(user_input):
     else:
         product_name = f"Avanii {nutrients[0]} Booster"
     
-    # Calculate amount
+    # Calculate amount using original formula
     if land_acres > 0:
-        # Base calculation: 10kg per nutrient per acre
-        amount = len(nutrients) * land_acres * 10
+        amount = len(nutrients) * land_acres * 12  # kg per nutrient per acre
         amount_str = f"{int(amount)} kg"
     else:
-        amount_str = "Consult our expert (land size not specified)"
+        amount_str = "Contact for consultation (land size not provided)"
     
     # Create why explanation
     why = " | ".join(reasons)

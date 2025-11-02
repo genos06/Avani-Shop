@@ -73,9 +73,13 @@ git push -u origin main
      DATABASE_URL=your-postgres-connection-string
      FLASK_ENV=production
      DEEPGRAM_API_KEY=your-deepgram-api-key
+     GEMINI_API_KEY=your-gemini-api-key
      ```
    
-   **Note:** The `DEEPGRAM_API_KEY` is required for the AI Fertilizer Advisor feature with Hindi speech recognition.
+   **Note:** 
+   - `DEEPGRAM_API_KEY` - Required for Hindi speech recognition (get from https://console.deepgram.com/)
+   - `GEMINI_API_KEY` - Required for AI data extraction (get from https://aistudio.google.com/app/apikey)
+   - Both are needed for the AI Fertilizer Advisor feature
 
 6. Click **"Deploy"**
 
@@ -96,6 +100,7 @@ vercel env add SECRET_KEY
 vercel env add DATABASE_URL
 vercel env add FLASK_ENV
 vercel env add DEEPGRAM_API_KEY
+vercel env add GEMINI_API_KEY
 
 # Deploy to production
 vercel --prod
@@ -180,19 +185,32 @@ SECRET_KEY=<your-generated-secret-key>
 DATABASE_URL=<postgresql-connection-string>
 FLASK_ENV=production
 DEEPGRAM_API_KEY=<your-deepgram-api-key>
+GEMINI_API_KEY=<your-gemini-api-key>
 ```
 
-### How to Add Deepgram API Key to Vercel:
+### How to Add API Keys to Vercel:
 
+#### Deepgram API Key (Speech-to-Text)
 1. Get your Deepgram API key from https://console.deepgram.com/
 2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
 3. Click "Add New"
 4. Name: `DEEPGRAM_API_KEY`
-5. Value: Paste your API key (e.g., `19d3d3267970b9826b1d47a8396755d1d63232e1`)
+5. Value: Paste your API key (get it from https://console.deepgram.com/)
 6. Select environments: Production, Preview, Development
 7. Click "Save"
 
-**Note:** The Deepgram API key enables the AI Fertilizer Advisor feature with advanced Hindi/English/Hinglish speech recognition.
+#### Gemini API Key (AI Data Extraction)
+1. Get your Gemini API key from https://aistudio.google.com/app/apikey
+2. Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+3. Click "Add New"
+4. Name: `GEMINI_API_KEY`
+5. Value: Paste your Gemini API key
+6. Select environments: Production, Preview, Development
+7. Click "Save"
+
+**Note:** Both API keys enable the AI Fertilizer Advisor feature:
+- **Deepgram** converts Hindi/English/Hinglish speech to text
+- **Gemini AI** extracts structured data (land size, nutrients, crops) and calculates precise fertilizer amounts
 
 ## 📁 Project Structure
 
