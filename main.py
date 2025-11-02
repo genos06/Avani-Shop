@@ -949,9 +949,11 @@ def admin_change_password():
             flash('New password must be at least 6 characters long', 'error')
             return redirect(url_for('admin_change_password'))
         
-        # Update password
-        current_user.password_hash = generate_password_hash(new_password)
+        # Update password - get fresh user from database
+        user = db_session.get(User, current_user.id)
+        user.password_hash = generate_password_hash(new_password)
         db_session.commit()
+        
         flash('Password changed successfully!', 'success')
         return redirect(url_for('admin_dashboard'))
     
