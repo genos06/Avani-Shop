@@ -160,6 +160,7 @@
                                     <li><a href="{{url_for('home')}}">Home</a></li>
                                     <li><a href="{{url_for('about')}}">About</a></li>
                                     <li><a href="{{url_for('shop')}}">Shop</a></li>
+                                    <li><a href="{{url_for('fertilizer_advisor')}}"><i class="fa fa-microphone" aria-hidden="true"></i> AI</a></li>
                                     {% if current_user.is_authenticated %}
                                         <li><a href="{{url_for('cart')}}"><i class="fa fa-shopping-cart" aria-hidden="true"></i> Cart ({{ cart_count }})</a></li>
                                         <li><a href="{{url_for('orders')}}"><i class="fa fa-list-alt" aria-hidden="true"></i> My Orders</a></li>

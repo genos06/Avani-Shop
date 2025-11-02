@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Transcription - Avanii</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .info-text {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-text p {
+            margin: 5px 0;
+            color: #555;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .record-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .record-button {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .record-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .record-button:active {
+            transform: scale(0.95);
+        }
+
+        .record-button.recording {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(245, 87, 108, 0);
+            }
+        }
+
+        .record-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .record-icon::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+
+        .record-button.recording .record-icon::before {
+            background: #f5576c;
+            border-radius: 3px;
+            width: 15px;
+            height: 15px;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            min-height: 30px;
+            font-weight: 500;
+        }
+
+        .status.recording {
+            color: #f5576c;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .timer {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .result-text {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #fee;
+            border-left: 4px solid #f44;
+            color: #c33;
+        }
+
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+
+        .copy-button:hover {
+            background: #5568d3;
+        }
+
+        .file-upload-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px dashed #ddd;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .file-upload-label:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        #audioFile {
+            display: none;
+        }
+
+        .selected-file {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .recommendation-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .recommendation-item {
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .recommendation-item strong {
+            color: #333;
+            display: inline-block;
+            min-width: 100px;
+        }
+
+        .recommendation-item span {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .why-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .why-section div {
+            margin-top: 10px;
+            color: #555;
+            line-height: 1.6;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><a href="{{url_for('home')}}" style="text-decoration: none;">🌱</a> Avanii - Fertilizer Advisor</h1>
+        <p class="subtitle">Speak about your land and crops to get AI-powered fertilizer recommendations</p>
+
+        <div class="info-text">
+            <p>🎙️ Speak in Hindi, English, or Hinglish</p>
+            <!-- <p>🤖 Get instant AI-powered fertilizer recommendations</p> -->
+        </div>
+
+        <div class="record-section">
+            <button class="record-button" id="recordButton">
+                <div class="record-icon"></div>
+                <span id="recordText">Record</span>
+            </button>
+            <div class="status" id="status">Click to start recording</div>
+            <div class="timer" id="timer" style="display: none;">00:00</div>
+        </div>
+
+        <div class="file-upload-section">
+            <label for="audioFile" class="file-upload-label">
+                📁 Or Upload Audio File
+            </label>
+            <input type="file" id="audioFile" accept="audio/*">
+            <div class="selected-file" id="selectedFile"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div id="loadingText">Processing audio...</div>
+            <div id="loadingSteps" style="margin-top: 15px; font-size: 14px; color: #666;"></div>
+        </div>
+
+        <div class="result-section" id="resultSection">
+            <div class="result-title">
+                📝 Your Input
+                <button class="copy-button" onclick="copyTranscription()">Copy</button>
+            </div>
+            <div class="result-text" id="transcription"></div>
+            
+            <div id="recommendationSection" style="display: none;">
+                <div class="result-title">
+                    🌱 Fertilizer Recommendation
+                </div>
+                <div class="recommendation-box">
+                    <div class="recommendation-item">
+                        <strong>🏷️ Product:</strong>
+                        <span id="productName"></span>
+                    </div>
+                    <div class="recommendation-item">
+                        <strong>⚖️ Amount:</strong>
+                        <span id="amount"></span>
+                    </div>
+                    <div class="recommendation-item why-section">
+                        <strong>💡 Why:</strong>
+                        <div id="why"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        let recordingTimer;
+        let seconds = 0;
+
+        const recordButton = document.getElementById('recordButton');
+        const recordText = document.getElementById('recordText');
+        const status = document.getElementById('status');
+        const timer = document.getElementById('timer');
+        const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
+        const loadingSteps = document.getElementById('loadingSteps');
+        const resultSection = document.getElementById('resultSection');
+        const transcriptionDiv = document.getElementById('transcription');
+        const audioFileInput = document.getElementById('audioFile');
+        const selectedFileDiv = document.getElementById('selectedFile');
+
+        // Record button click handler
+        recordButton.addEventListener('click', async () => {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        // File upload handler
+        audioFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                selectedFileDiv.textContent = `Selected: ${file.name}`;
+                uploadAndTranscribe(file);
+            }
+        });
+
+        async function startRecording() {
+            try {
+                // Request high-quality audio
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,              // Mono audio
+                        sampleRate: 48000,            // High sample rate
+                        echoCancellation: true,       // Remove echo
+                        noiseSuppression: true,       // Remove background noise
+                        autoGainControl: true         // Automatic volume adjustment
+                    }
+                });
+                
+                // Check for supported MIME types and use best quality
+                let options = { mimeType: 'audio/webm;codecs=opus' };
+                
+                // Try different formats for better compatibility
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'audio/webm' };
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = { mimeType: 'audio/ogg;codecs=opus' };
+                }
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+                    options = {}; // Use browser default
+                }
+                
+                mediaRecorder = new MediaRecorder(stream, options);
+                audioChunks = [];
+                seconds = 0;
+                
+                console.log('Recording with:', options.mimeType || 'default format');
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    await sendAudioToServer(audioBlob);
+                    
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.classList.add('recording');
+                recordText.textContent = 'Stop';
+                status.textContent = 'Recording...';
+                status.classList.add('recording');
+                timer.style.display = 'block';
+                resultSection.classList.remove('show');
+
+                // Start timer
+                recordingTimer = setInterval(() => {
+                    seconds++;
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    timer.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                }, 1000);
+
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                status.textContent = 'Error: Could not access microphone';
+                status.classList.remove('recording');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.classList.remove('recording');
+                recordText.textContent = 'Record';
+                status.textContent = 'Processing...';
+                status.classList.remove('recording');
+                clearInterval(recordingTimer);
+                timer.style.display = 'none';
+            }
+        }
+
+        async function sendAudioToServer(audioBlob) {
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'recording.webm');
+
+            // Show loading with steps
+            loading.classList.add('show');
+            loadingText.textContent = 'Processing your audio...';
+            loadingSteps.innerHTML = '✅ Audio recorded<br>🔄 Converting format...';
+            status.textContent = 'Processing...';
+
+            try {
+                // Simulate step updates
+                setTimeout(() => {
+                    if (loading.classList.contains('show')) {
+                        loadingText.textContent = 'Transcribing speech...';
+                        loadingSteps.innerHTML = '✅ Audio recorded<br>✅ Format converted<br>🎙️ Transcribing...';
+                        status.textContent = 'Transcribing...';
+                    }
+                }, 1000);
+
+                setTimeout(() => {
+                    if (loading.classList.contains('show')) {
+                        loadingText.textContent = 'Getting AI recommendation...';
+                        loadingSteps.innerHTML = '✅ Audio recorded<br>✅ Format converted<br>✅ Speech transcribed<br>🤖 Analyzing with AI...';
+                        status.textContent = 'Analyzing...';
+                    }
+                }, 3000);
+
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                // Final step
+                loadingText.textContent = 'Almost done...';
+                loadingSteps.innerHTML = '✅ Audio recorded<br>✅ Format converted<br>✅ Speech transcribed<br>✅ AI analysis complete<br>🌱 Preparing recommendation...';
+                
+                setTimeout(() => {
+                    displayResult(result);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                transcriptionDiv.textContent = 'Error: Failed to transcribe audio';
+                transcriptionDiv.classList.add('error');
+                resultSection.classList.add('show');
+                status.textContent = 'Error occurred';
+            } finally {
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    loadingSteps.innerHTML = '';
+                }, 600);
+            }
+        }
+
+        async function uploadAndTranscribe(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading with steps
+            loading.classList.add('show');
+            loadingText.textContent = 'Processing uploaded file...';
+            loadingSteps.innerHTML = '✅ File uploaded<br>🔄 Converting format...';
+            status.textContent = 'Processing...';
+            resultSection.classList.remove('show');
+
+            try {
+                // Simulate step updates
+                setTimeout(() => {
+                    if (loading.classList.contains('show')) {
+                        loadingText.textContent = 'Transcribing speech...';
+                        loadingSteps.innerHTML = '✅ File uploaded<br>✅ Format converted<br>🎙️ Transcribing...';
+                        status.textContent = 'Transcribing...';
+                    }
+                }, 1000);
+
+                setTimeout(() => {
+                    if (loading.classList.contains('show')) {
+                        loadingText.textContent = 'Getting AI recommendation...';
+                        loadingSteps.innerHTML = '✅ File uploaded<br>✅ Format converted<br>✅ Speech transcribed<br>🤖 Analyzing with AI...';
+                        status.textContent = 'Analyzing...';
+                    }
+                }, 3000);
+
+                const response = await fetch('/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                // Final step
+                loadingText.textContent = 'Almost done...';
+                loadingSteps.innerHTML = '✅ File uploaded<br>✅ Format converted<br>✅ Speech transcribed<br>✅ AI analysis complete<br>🌱 Preparing recommendation...';
+                
+                setTimeout(() => {
+                    displayResult(result);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                transcriptionDiv.textContent = 'Error: Failed to transcribe audio';
+                transcriptionDiv.classList.add('error');
+                resultSection.classList.add('show');
+                status.textContent = 'Error occurred';
+            } finally {
+                setTimeout(() => {
+                    loading.classList.remove('show');
+                    loadingSteps.innerHTML = '';
+                    selectedFileDiv.textContent = '';
+                    audioFileInput.value = '';
+                }, 600);
+            }
+        }
+
+        function displayResult(result) {
+            console.log('Full result:', result);
+            console.log('Recommendation:', result.recommendation);
+            
+            if (result.success) {
+                transcriptionDiv.textContent = result.transcription;
+                transcriptionDiv.classList.remove('error');
+                
+                // Display fertilizer recommendation
+                console.log('Checking recommendation...');
+                console.log('result.recommendation:', result.recommendation);
+                
+                if (result.recommendation) {
+                    console.log('recommendation.success:', result.recommendation.success);
+                    
+                    if (result.recommendation.success) {
+                        console.log('Displaying recommendation:', result.recommendation);
+                        const rec = result.recommendation;
+                        document.getElementById('productName').textContent = rec.product_name || 'N/A';
+                        document.getElementById('amount').textContent = rec.amount || 'N/A';
+                        document.getElementById('why').textContent = rec.why || 'No explanation provided';
+                        document.getElementById('recommendationSection').style.display = 'block';
+                        console.log('Recommendation section displayed');
+                    } else {
+                        console.error('Recommendation failed:', result.recommendation.error);
+                        // Show error in recommendation section
+                        document.getElementById('productName').textContent = 'Error';
+                        document.getElementById('amount').textContent = 'N/A';
+                        document.getElementById('why').textContent = result.recommendation.error || 'Failed to generate recommendation';
+                        document.getElementById('recommendationSection').style.display = 'block';
+                    }
+                } else {
+                    console.warn('No recommendation in response');
+                    document.getElementById('recommendationSection').style.display = 'none';
+                }
+                
+                status.textContent = 'Recommendation ready!';
+                resultSection.classList.add('show');
+            } else {
+                transcriptionDiv.textContent = `Error: ${result.error}\n${result.details || ''}`;
+                transcriptionDiv.classList.add('error');
+                document.getElementById('recommendationSection').style.display = 'none';
+                status.textContent = 'Error occurred';
+                resultSection.classList.add('show');
+            }
+        }
+
+        function copyTranscription() {
+            const text = transcriptionDiv.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Transcription copied to clipboard!');
+            });
+        }
+    </script>
+</body>
+</html>
